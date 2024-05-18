@@ -58,8 +58,10 @@ class RollerShutterThing(Thing):
 
 
 def run_server(description: str, port: int, name: str, name_address_map: Dict[str, str]):
-    shutters = [RollerShutter(name + "_" + dev_name, name_address_map[dev_name]) for dev_name in name_address_map.keys()]
-    if len(shutters) > 1:
+    if len(name_address_map) < 2:
+        shutters = [RollerShutter(name, name_address_map[dev_name]) for dev_name in name_address_map.keys()]
+    else:
+        shutters = [RollerShutter(name + "_" + dev_name, name_address_map[dev_name]) for dev_name in name_address_map.keys()]
         shutters = [RollerShutters(name + "_all", shutters)] + shutters
     shutters_tings = [RollerShutterThing(description, shutter) for shutter in shutters]
     server = WebThingServer(MultipleThings(shutters_tings, name), port=port, disable_host_validation=True)
