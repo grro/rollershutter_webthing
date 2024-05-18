@@ -58,8 +58,8 @@ class RollerShutterThing(Thing):
 
 
 def run_server(description: str, port: int, name: str, name_address_map: Dict[str, str]):
-    shutters = [RollerShutter(name, name_address_map[name]) for name in name_address_map.keys()]
-    shutters_tings = [RollerShutterThing(description, RollerShutters(name + "Shutters", shutters))] + [RollerShutterThing(description, shutter) for shutter in shutters]
+    shutters = [RollerShutter(name + "_" + dev_name, name_address_map[dev_name]) for dev_name in name_address_map.keys()]
+    shutters_tings = [RollerShutterThing(description, RollerShutters(name + "_all", shutters))] + [RollerShutterThing(description, shutter) for shutter in shutters]
     server = WebThingServer(MultipleThings(shutters_tings, name), port=port, disable_host_validation=True)
     try:
         logging.info('starting the server http://localhost:' + str(port))
