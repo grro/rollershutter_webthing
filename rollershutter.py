@@ -61,6 +61,12 @@ class Shutter(ABC):
     def _notify_listeners(self):
         [listener() for listener in self.__listeners]
 
+    def start(self):
+        pass
+
+    def stop(self):
+        pass
+
     @abstractmethod
     def position(self) -> int:
         pass
