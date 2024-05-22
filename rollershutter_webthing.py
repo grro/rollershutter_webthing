@@ -37,7 +37,7 @@ class RollerShutterThing(Thing):
                          'readOnly': True,
                      }))
 
-        self.position = Value(shutter.position)
+        self.position = Value(shutter.position, shutter.set_position)
         self.add_property(
             Property(self,
                      'position',
