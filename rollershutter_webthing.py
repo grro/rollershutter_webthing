@@ -44,7 +44,7 @@ class RollerShutterThing(Thing):
                      self.position,
                      metadata={
                          'title': 'position',
-                         "type": "int",
+                         "type": "integer",
                          'description': 'the position in percent [0..100]',
                          'readOnly': False,
                      }))
@@ -90,3 +90,8 @@ if __name__ == '__main__':
     logging.getLogger('tornado.access').setLevel(logging.ERROR)
     logging.getLogger('urllib3.connectionpool').setLevel(logging.WARNING)
     run_server("description", int(sys.argv[1]), sys.argv[2], parse_devices(sys.argv[3]))
+
+
+
+# test curl
+# curl -X PUT -d '{"position": 40}' http://localhost:9955/0/properties/position
