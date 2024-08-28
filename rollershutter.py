@@ -90,6 +90,7 @@ class RollerShutter(Shutter):
     def position(self) -> int:
         return self.__position
 
+
     def set_position(self, target_position: int):
         logging.info(self.name + " setting position=" + str(target_position))
         self.__position = self.__shelly.position(target_position)
