@@ -84,6 +84,7 @@ class RollerShutter(Shutter):
         self.__position = 0
         self.__shelly = Shelly25(addr)
         super().__init__(name)
+        logging.info("shutter " + name + " connected (" + addr + ")")
 
     @property
     def position(self) -> int:
