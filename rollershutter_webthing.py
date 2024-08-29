@@ -45,8 +45,8 @@ class RollerShutterThing(Thing):
                      metadata={
                          'title': 'position',
                          "type": "number",
-                         "minimum": 100,
-                         "maximum": 0,
+                         "minimum": 0,
+                         "maximum": 100,
                          "unit": "percent",
                          'description': 'the position in percent [0..100]',
                          'readOnly': False,
