@@ -43,6 +43,7 @@ class RollerShutterThing(Thing):
                      'position',
                      self.position,
                      metadata={
+                         '@type': 'LevelProperty',
                          'title': 'position',
                          "type": "number",
                          "minimum": 0,
