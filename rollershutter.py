@@ -79,20 +79,27 @@ class Shutter(ABC):
 
 class RollerShutter(Shutter):
 
-    def __init__(self, name: str, addr: str):
+    def __init__(self, name: str, addr: str, reverse_directions: bool):
         self.__is_running = True
         self.__position = 0
+        self.__reverse_directions = reverse_directions
         self.__shelly = Shelly25(addr)
         super().__init__(name)
         logging.info("shutter " + name + " connected. Current pos: " + str(self.__shelly.query()) + " (" + addr + ")")
 
     @property
     def position(self) -> int:
-        return self.__position
+        if self.__reverse_directions:
+            return 100 - self.__position
+        else:
+            return self.__position
 
     def set_position(self, target_position: int):
         logging.info(self.name + " setting position=" + str(target_position))
-        self.__position = self.__shelly.position(target_position)
+        if self.__reverse_directions:
+            self.__position = self.__shelly.position(100-target_position)
+        else:
+            self.__position = self.__shelly.position(target_position)
         self._notify_listeners()
 
     def start(self):

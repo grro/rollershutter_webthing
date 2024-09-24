@@ -61,11 +61,11 @@ class RollerShutterThing(Thing):
         self.position.notify_of_external_update(self.shutter.position)
 
 
-def run_server(description: str, port: int, name: str, name_address_map: Dict[str, str]):
+def run_server(description: str, port: int, name: str, name_address_map: Dict[str, str], reverse_directions: bool):
     if len(name_address_map) < 2:
-        shutters = [RollerShutter(name, name_address_map[dev_name]) for dev_name in name_address_map.keys()]
+        shutters = [RollerShutter(name, name_address_map[dev_name], reverse_directions=reverse_directions) for dev_name in name_address_map.keys()]
     else:
-        shutters = [RollerShutter(name + "_" + dev_name, name_address_map[dev_name]) for dev_name in name_address_map.keys()]
+        shutters = [RollerShutter(name + "_" + dev_name, name_address_map[dev_name], reverse_directions=reverse_directions) for dev_name in name_address_map.keys()]
         shutters = [RollerShutters(name + "_all", shutters)] + shutters
     shutters_tings = [RollerShutterThing(description, shutter) for shutter in shutters]
     server = WebThingServer(MultipleThings(shutters_tings, name), port=port, disable_host_validation=True)
@@ -85,7 +85,10 @@ def parse_devices(config: str) -> Dict[str, str]:
     name_address_map = {}
     for device in config.split("&"):
         name, address = device.split('=')
-        name_address_map[name.strip()] = address.strip()
+        address = address.strip()
+        if address.endswith('/'):
+            address = address[:-1]
+        name_address_map[name.strip()] = address
     return name_address_map
 
 
@@ -93,7 +96,7 @@ if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s %(name)-20s: %(levelname)-8s %(message)s', level=logging.INFO, datefmt='%Y-%m-%d %H:%M:%S')
     logging.getLogger('tornado.access').setLevel(logging.ERROR)
     logging.getLogger('urllib3.connectionpool').setLevel(logging.WARNING)
-    run_server("description", int(sys.argv[1]), sys.argv[2], parse_devices(sys.argv[3]))
+    run_server("description", int(sys.argv[1]), sys.argv[2], parse_devices(sys.argv[3]), sys.argv[4].strip().lower() == 'true')
 
 
 
