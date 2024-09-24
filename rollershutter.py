@@ -85,7 +85,7 @@ class RollerShutter(Shutter):
         self.__reverse_directions = reverse_directions
         self.__shelly = Shelly25(addr)
         super().__init__(name)
-        logging.info("shutter " + name + " connected. Current pos: " + str(self.__shelly.query()) + " (" + addr + ")")
+        logging.info("shutter " + name + " connected. Current pos: " + str(self.__shelly.query()) + " (" + addr + "). reverse_directions=" + str(self.__reverse_directions))
 
     @property
     def position(self) -> int:
