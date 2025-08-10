@@ -97,7 +97,13 @@ class RollerShutters(Shutter):
 
     @property
     def position(self) -> int:
-        positions = [shutter.position for shutter in self.__shutter]
+        positions = []
+        for shutter in self.__shutter:
+            try:
+                positions.append(shutter.position)
+            except Exception as e:
+                logging.error("error getting position for " + shutter.name + ": " + str(e))
+
         total = sum(positions)
         if total == 0:
             return 0
@@ -105,4 +111,8 @@ class RollerShutters(Shutter):
             return int(total/len(positions))
 
     def set_position(self, target_position: int):
-        [shutter.set_position(target_position) for shutter in self.__shutter]
+        for shutter in self.__shutter:
+            try:
+                shutter.set_position(target_position)
+            except Exception as e:
+                logging.error("error setting position for " + shutter.name + ": " + str(e))

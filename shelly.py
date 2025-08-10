@@ -8,7 +8,7 @@ from typing import Optional
 class Rollershutter(ABC):
 
     @abstractmethod
-    def update_position(self, target_postion: int) -> int:
+    def update_position(self, target_position: int) -> int:
         pass
 
     @abstractmethod
