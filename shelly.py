@@ -17,7 +17,6 @@ class Rollershutter(ABC):
 
 
 
-
 class Shelly2(Rollershutter):
 
     def __init__(self, addr: str):
