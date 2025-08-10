@@ -93,6 +93,10 @@ class ShellyRollershutter(Rollershutter):
         except Exception as e:
             pass
 
-        logging.warning("unsupported shelly running on " + addr)
+        logging.warning("unreachable or unsupported shelly running on " + addr)
         return None
 
+
+s = ShellyRollershutter('http://10.1.33.67')
+#s = ShellyRollershutter('http://10.1.33.66')
+print(s.current_position())
