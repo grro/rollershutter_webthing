@@ -1,51 +1,9 @@
 import logging
-from requests import Session
 from typing import List
 from abc import ABC, abstractmethod
 from threading import Thread
 from time import sleep
-
-
-
-
-class Shelly25:
-
-    def __init__(self, addr: str):
-        self.__session = Session()
-        self.addr = addr
-
-    def query(self) -> int:
-        uri = self.addr + '/roller/0'
-        try:
-            resp = self.__session.get(uri, timeout=30)
-            try:
-                data = resp.json()
-                current_pos = data['current_pos']
-                return current_pos
-            except Exception as e:
-                raise Exception("called " + uri + " got " + str(resp.status_code) + " " + resp.text + " " + str(e))
-        except Exception as e:
-            self.__renew_session()
-            raise Exception("called " + uri + " got " + str(e))
-
-    def position(self, target_postion: int) -> int:
-        uri = self.addr + '/roller/0?go=to_pos&roller_pos=' + str(target_postion)
-        try:
-            resp = self.__session.get(uri, timeout=30)
-            resp.raise_for_status()
-            return target_postion
-        except Exception as e:
-            self.__renew_session()
-            raise Exception("called " + uri + " got " + str(e))
-
-    def __renew_session(self):
-        logging.info("renew session for " + self.addr)
-        try:
-            self.__session.close()
-        except Exception as e:
-            logging.warning(str(e))
-        self.__session = Session()
-
+from shelly import ShellyRollershutter
 
 
 
@@ -83,10 +41,10 @@ class RollerShutter(Shutter):
         self.__is_running = True
         self.__position = 0
         self.__reverse_directions = reverse_directions
-        self.__shelly = Shelly25(addr)
+        self.__shelly = ShellyRollershutter(addr)
         super().__init__(name)
         try:
-            logging.info("shutter " + name + " connected. Current pos: " + str(self.__shelly.query()) + " (" + addr + "). reverse_directions=" + str(self.__reverse_directions))
+            logging.info("shutter " + name + " connected. Current pos: " + str(self.__shelly.current_position()) + " (" + addr + "). reverse_directions=" + str(self.__reverse_directions))
         except Exception as e:
             logging.error("shutter " + name + " could not connect to " + addr + ". Error: " + str(e))
 
@@ -100,9 +58,9 @@ class RollerShutter(Shutter):
     def set_position(self, target_position: int):
         logging.info(self.name + " setting position=" + str(target_position))
         if self.__reverse_directions:
-            self.__position = self.__shelly.position(100-target_position)
+            self.__position = self.__shelly.update_position(100-target_position)
         else:
-            self.__position = self.__shelly.position(target_position)
+            self.__position = self.__shelly.update_position(target_position)
         self._notify_listeners()
 
     def start(self):
@@ -123,7 +81,7 @@ class RollerShutter(Shutter):
 
     def __sync(self) -> bool:
         try:
-            self.__position = self.__shelly.query()
+            self.__position = self.__shelly.current_position()
             return True
         except Exception as e:
             return False

@@ -1,29 +1,30 @@
 from requests import Session
 from abc import ABC, abstractmethod
 import logging
-from time import sleep
 from typing import Optional
-from dataclasses import dataclass
-
 
 
 
 class Rollershutter(ABC):
 
     @abstractmethod
-    def measure(self) -> Optional[Measure]:
+    def update_position(self, target_postion: int) -> int:
+        pass
+
+    @abstractmethod
+    def current_position(self) -> int:
         pass
 
 
 
 
-class Shelly25(Rollershutter):
+class Shelly2(Rollershutter):
 
     def __init__(self, addr: str):
         self.__session = Session()
         self.addr = addr
 
-    def query(self) -> int:
+    def current_position(self) -> int:
         uri = self.addr + '/roller/0'
         try:
             resp = self.__session.get(uri, timeout=30)
@@ -37,12 +38,12 @@ class Shelly25(Rollershutter):
             self.__renew_session()
             raise Exception("called " + uri + " got " + str(e))
 
-    def position(self, target_postion: int) -> int:
-        uri = self.addr + '/roller/0?go=to_pos&roller_pos=' + str(target_postion)
+    def update_position(self, target_position: int) -> int:
+        uri = self.addr + '/roller/0?go=to_pos&roller_pos=' + str(target_position)
         try:
             resp = self.__session.get(uri, timeout=30)
             resp.raise_for_status()
-            return target_postion
+            return target_position
         except Exception as e:
             self.__renew_session()
             raise Exception("called " + uri + " got " + str(e))
@@ -57,50 +58,41 @@ class Shelly25(Rollershutter):
 
 
 
+
 class ShellyRollershutter(Rollershutter):
 
     def __init__(self, addr: str):
-        self.device = Rollershutter.auto_select(addr)
+        self.addr = addr
+        self.device = None
 
-    def measure(self) -> Optional[Measure]:
-        return self.device.measure()
+    def update_position(self, target_position: int) -> int:
+        if self.device is None:
+            self.device = ShellyRollershutter.auto_select(self.addr)
+        try:
+            return self.device.update_position(target_position)
+        except Exception as e:
+            self.device = None
+            raise e
+
+    def current_position(self) -> int:
+        if self.device is None:
+            self.device = ShellyRollershutter.auto_select(self.addr)
+        try:
+            return self.device.current_position()
+        except Exception as e:
+            self.device = None
+            raise e
 
     @staticmethod
     def auto_select(addr: str) -> Optional[Rollershutter]:
         try:
-            s = Shelly1pro(addr)
-            s.measure()
-            logging.info("detected shelly1pro running on " + addr)
-            return s
-        except Exception as e:
-            pass
-
-        try:
-            s = Shelly1pm(addr)
-            s.measure()
-            logging.info("detected shelly1pm running on " + addr)
-            return s
-        except Exception as e:
-            pass
-
-        try:
-            s = ShellyPmMini(addr)
-            s.measure()
-            logging.info("detected shellyPmMini running on " + addr)
-            return s
-        except Exception as e:
-            pass
-
-        try:
-            s = Shelly3em(addr)
-            s.measure()
-            logging.info("detected shelly3em running on " + addr)
+            s = Shelly2(addr)
+            s.current_position()
+            logging.info("detected shelly2PM or shelly25 running on " + addr)
             return s
         except Exception as e:
             pass
 
         logging.warning("unsupported shelly running on " + addr)
         return None
-
-
 
