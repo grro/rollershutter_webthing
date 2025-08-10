@@ -85,7 +85,10 @@ class RollerShutter(Shutter):
         self.__reverse_directions = reverse_directions
         self.__shelly = Shelly25(addr)
         super().__init__(name)
-        logging.info("shutter " + name + " connected. Current pos: " + str(self.__shelly.query()) + " (" + addr + "). reverse_directions=" + str(self.__reverse_directions))
+        try:
+            logging.info("shutter " + name + " connected. Current pos: " + str(self.__shelly.query()) + " (" + addr + "). reverse_directions=" + str(self.__reverse_directions))
+        except Exception as e:
+            logging.error("shutter " + name + " could not connect to " + addr + ". Error: " + str(e))
 
     @property
     def position(self) -> int:
