@@ -1,4 +1,6 @@
 import logging
+from datetime import datetime
+from time import sleep
 from typing import List
 from abc import ABC, abstractmethod
 from threading import Thread
@@ -42,6 +44,7 @@ class RollerShutter(Shutter):
         self.__position = 0
         self.__reverse_directions = reverse_directions
         self.__shelly = ShellyRollershutter(addr)
+        self.last_update = datetime.now()
         super().__init__(name)
         try:
             logging.info("shutter " + name + " connected. Current pos: " + str(self.__shelly.current_position()) + " (" + addr + "). reverse_directions=" + str(self.__reverse_directions))
@@ -56,6 +59,12 @@ class RollerShutter(Shutter):
             return self.__position
 
     def set_position(self, target_position: int):
+        elapsed_secs = (datetime.now() - self.last_update).total_seconds()
+        if elapsed_secs < 2:
+            # Prevent high frequent on off toggling
+            sleep(2)
+
+        self.last_update = datetime.now()
         logging.info(self.name + " setting position=" + str(target_position))
         if self.__reverse_directions:
             self.__position = self.__shelly.update_position(100-target_position)
