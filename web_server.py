@@ -9,6 +9,10 @@ from typing import List, Dict, Any
 
 class SimpleRequestHandler(BaseHTTPRequestHandler):
 
+    def log_message(self, format, *args):
+        # Diese Methode leer lassen, um die Standard-Logs zu unterdrücken
+        pass
+
     def do_GET(self):
         shutter_name = self.__shuttername()
         shutter = next((s for s in self.server.shutters if s.name == shutter_name), None)
