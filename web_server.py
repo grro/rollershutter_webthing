@@ -22,12 +22,12 @@ class SimpleRequestHandler(BaseHTTPRequestHandler):
             if 'position' in query_params:
                 try:
                     new_pos = int(query_params['position'][0])
-                    target_pos = (100 - new_pos) if self.server.revert_position else new_pos
+                    target_pos = new_pos
                     shutter.set_position(target_pos)
                 except ValueError:
                     self._send_json(400, {"error": "position must be a number"})
             else:
-                self._send_json(200, {'position': (100 - shutter.position) if self.server.revert_position else shutter.position})
+                self._send_json(200, {'position': shutter.position})
         else:
             html = "<h1>available shutters</h1><ul>"
             for s in self.server.shutters :
@@ -48,20 +48,19 @@ class SimpleRequestHandler(BaseHTTPRequestHandler):
         self.wfile.write(json.dumps(data).encode("utf-8"))
 
 class RollershutterWebServer:
-    def __init__(self, shutters: List[RollerShutter],  revert_position: bool = False, host='0.0.0.0', port=8000):
+    def __init__(self, shutters: List[RollerShutter],  host='0.0.0.0', port=8000):
         self.host = host
         self.port = port
         self.address = (self.host, self.port)
         self.server = HTTPServer(self.address, SimpleRequestHandler)
         self.server.shutters = shutters
-        self.server.revert_position = revert_position
         self.server_thread = None
 
     def start(self):
         self.server_thread = threading.Thread(target=self.server.serve_forever)
         self.server_thread.daemon = True
         self.server_thread.start()
-        logging.info(f"web server started http://{self.host}:{self.port} (revert_position={self.server.revert_position})")
+        logging.info(f"web server started http://{self.host}:{self.port}")
 
     def stop(self):
         self.server.shutdown()
