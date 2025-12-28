@@ -70,7 +70,7 @@ def run_server(description: str, port: int, name: str, name_address_map: Dict[st
         shutters = [RollerShutters(name + "_all", shutters)] + shutters
     shutters_tings = [RollerShutterThing(description, shutter) for shutter in shutters]
 
-    web_server = RollershutterWebServer(shutters, port=port+1, revert_position=False)
+    web_server = RollershutterWebServer(shutters, port=port+1, revert_position=True)
     server = WebThingServer(MultipleThings(shutters_tings, name), port=port, disable_host_validation=True)
     try:
         [shutter.start() for shutter in shutters]
