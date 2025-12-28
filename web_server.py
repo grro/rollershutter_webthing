@@ -42,7 +42,7 @@ class SimpleRequestHandler(BaseHTTPRequestHandler):
                 self._send_json(200, {
                     "status": "success",
                     "shutter": shutter.name,
-                    "new_position": shutter.position
+                    "new_position": new_pos
                 })
             except ValueError:
                 self._send_json(400, {"error": "position must be a number"})
