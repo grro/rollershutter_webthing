@@ -36,8 +36,7 @@ class SimpleRequestHandler(BaseHTTPRequestHandler):
         if 'position' in query_params:
             try:
                 new_pos = int(query_params['position'][0])
-                new_pos = (100 - new_pos) if self.server.revert_position else new_pos
-                shutter.set_position(new_pos)
+                shutter.set_position((100 - new_pos) if self.server.revert_position else new_pos)
 
                 self._send_json(200, {
                     "status": "success",
