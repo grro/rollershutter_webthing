@@ -1,5 +1,6 @@
 import json
 import threading
+import logging
 from urllib.parse import urlparse, parse_qs
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from rollershutter import RollerShutter
@@ -65,7 +66,7 @@ class SimpleRequestHandler(BaseHTTPRequestHandler):
         self.wfile.write(json.dumps(data).encode("utf-8"))
 
 class RollershutterWebServer:
-    def __init__(self, shutters: List[RollerShutter],  revert_position: bool = False, host='localhost', port=8000):
+    def __init__(self, shutters: List[RollerShutter],  revert_position: bool = False, host='0.0.0.0', port=8000):
         self.host = host
         self.port = port
         self.address = (self.host, self.port)
@@ -78,10 +79,10 @@ class RollershutterWebServer:
         self.server_thread = threading.Thread(target=self.server.serve_forever)
         self.server_thread.daemon = True
         self.server_thread.start()
-        print(f"web server started http://{self.host}:{self.port}")
+        logging.info(f"web server started http://{self.host}:{self.port}")
 
     def stop(self):
         self.server.shutdown()
         self.server.server_close()
-        print("web server stopped")
+        logging.info("web server stopped")
 
