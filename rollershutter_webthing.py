@@ -76,7 +76,7 @@ def run_server(description: str, port: int, name: str, name_address_map: Dict[st
         [shutter.start() for shutter in shutters]
         web_server.start()
         logging.info('starting the server http://localhost:' + str(port))
-        #server.start()
+        server.start()
         sleep(10000)
     except KeyboardInterrupt:
         logging.info('stopping the server')
