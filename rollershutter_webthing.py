@@ -2,9 +2,10 @@ import sys
 import logging
 import tornado.ioloop
 from typing import Dict
+from time import sleep
 from webthing import (MultipleThings, Property, Thing, Value, WebThingServer)
 from rollershutter import Shutter, RollerShutter, RollerShutters
-
+from web_server import RollershutterWebServer
 
 
 
@@ -17,7 +18,7 @@ class RollerShutterThing(Thing):
         Thing.__init__(
             self,
             'urn:dev:ops:rollershutter-1',
-            'rollershutter_' + shutter.name,
+            'rshutter_' + shutter.name,
             ['MultiLevelSensor'],
             description
         )
@@ -68,14 +69,19 @@ def run_server(description: str, port: int, name: str, name_address_map: Dict[st
         shutters = [RollerShutter(name + "_" + dev_name, name_address_map[dev_name], reverse_directions=reverse_directions) for dev_name in name_address_map.keys()]
         shutters = [RollerShutters(name + "_all", shutters)] + shutters
     shutters_tings = [RollerShutterThing(description, shutter) for shutter in shutters]
+
+    web_server = RollershutterWebServer(shutters, port=port+1, revert_position=True)
     server = WebThingServer(MultipleThings(shutters_tings, name), port=port, disable_host_validation=True)
     try:
-        logging.info('starting the server http://localhost:' + str(port))
         [shutter.start() for shutter in shutters]
-        server.start()
+        web_server.start()
+        logging.info('starting the server http://localhost:' + str(port))
+        #server.start()
+        sleep(10000)
     except KeyboardInterrupt:
         logging.info('stopping the server')
         [shutter.stop() for shutter in shutters]
+        web_server.stop()
         server.stop()
         logging.info('done')
 
