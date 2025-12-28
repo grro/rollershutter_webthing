@@ -79,7 +79,7 @@ class RollershutterWebServer:
         self.server_thread = threading.Thread(target=self.server.serve_forever)
         self.server_thread.daemon = True
         self.server_thread.start()
-        logging.info(f"web server started http://{self.host}:{self.port}")
+        logging.info(f"web server started http://{self.host}:{self.port} (revert_position={self.server.revert_position})")
 
     def stop(self):
         self.server.shutdown()
