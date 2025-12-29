@@ -4,7 +4,7 @@ import tornado.ioloop
 from typing import Dict
 from time import sleep
 from webthing import (MultipleThings, Property, Thing, Value, WebThingServer)
-from mcp_server import MCPServer
+from rollershutter_mcp import RollershutterMCPServer
 from rollershutter import Shutter, RollerShutter, RollerShutters
 from web_server import RollershutterWebServer
 
@@ -72,7 +72,7 @@ def run_server(description: str, port: int, name: str, name_address_map: Dict[st
     shutters_tings = [RollerShutterThing(description, shutter) for shutter in shutters]
 
     web_server = RollershutterWebServer(shutters, port=port+1)
-    mcp_server = MCPServer(shutters_tings)
+    mcp_server = RollershutterMCPServer(name, port+2, shutters)
     server = WebThingServer(MultipleThings(shutters_tings, name), port=port, disable_host_validation=True)
     try:
         [shutter.start() for shutter in shutters]
