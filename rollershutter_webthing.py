@@ -18,7 +18,7 @@ class RollerShutterThing(Thing):
         Thing.__init__(
             self,
             'urn:dev:ops:rollershutter-1',
-            'rshutter_' + shutter.name,
+            'rollershutter_' + shutter.name,
             ['MultiLevelSensor'],
             description
         )

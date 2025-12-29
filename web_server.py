@@ -10,7 +10,7 @@ from typing import List, Dict, Any
 class SimpleRequestHandler(BaseHTTPRequestHandler):
 
     def log_message(self, format, *args):
-        # Diese Methode leer lassen, um die Standard-Logs zu unterdrücken
+        # suppress access logging
         pass
 
     def do_GET(self):
