@@ -25,7 +25,7 @@ class RollershutterMCPServer(MCPServer):
             for shutter in self.rollershutters:
                 if shutter.name == shuttername:
                     return shutter.position
-            raise ValueError(f"roller shutter '{name}' not found")
+            raise ValueError(f"Roller shutter '{shuttername}' not found")
 
 
         @self.mcp.tool()
