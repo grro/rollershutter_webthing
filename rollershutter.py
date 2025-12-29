@@ -1,6 +1,4 @@
 import logging
-from datetime import datetime
-from time import sleep
 from typing import List
 from abc import ABC, abstractmethod
 from threading import Thread
@@ -12,7 +10,7 @@ from shelly import ShellyRollershutter
 class Shutter(ABC):
 
     def __init__(self, name: str):
-        self.name = name
+        self.__name = name
         self.__listeners = set()
 
     def add_listener(self, listener):
@@ -26,6 +24,10 @@ class Shutter(ABC):
 
     def stop(self):
         pass
+
+    @property
+    def name(self) -> str:
+        return self.__name
 
     @abstractmethod
     def position(self) -> int:
