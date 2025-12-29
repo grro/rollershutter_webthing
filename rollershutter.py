@@ -29,6 +29,7 @@ class Shutter(ABC):
     def name(self) -> str:
         return self.__name
 
+    @property
     @abstractmethod
     def position(self) -> int:
         pass

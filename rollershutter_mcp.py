@@ -17,15 +17,15 @@ class RollershutterMCPServer(MCPServer):
 
 
         @self.mcp.resource("rollershutter://{shuttername}/position")
-        def get_position(shuttername: str) -> str:
+        def get_position(shuttername: str) -> int:
             """
             Returns the current position of a specific rollershutter.
             0 = fully open, 100 = fully closed.
             """
             for shutter in self.rollershutters:
                 if shutter.name == shuttername:
-                    return str(shutter.position())
-            raise ValueError(f"shutter '{name}' not found")
+                    return shutter.position
+            raise ValueError(f"roller shutter '{name}' not found")
 
 
         @self.mcp.tool()
@@ -48,3 +48,4 @@ class RollershutterMCPServer(MCPServer):
 
 
 # npx @modelcontextprotocol/inspector
+
