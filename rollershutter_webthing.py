@@ -6,7 +6,7 @@ from time import sleep
 from webthing import (MultipleThings, Property, Thing, Value, WebThingServer)
 from rollershutter_mcp import RollershutterMCPServer
 from rollershutter import Shutter, RollerShutter, RollerShutters
-from web_server import RollershutterWebServer
+from rollershutter_web import RollershutterWebServer
 
 
 
