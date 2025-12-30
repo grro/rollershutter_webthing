@@ -12,7 +12,7 @@ class RollershutterMCPServer(MCPServer):
 
         @self.mcp.resource("rollershutter://list/names")
         def list_shutter_names() -> str:
-            """Returns a comma-separated list of all available rollershutter names."""
+            """Returns a comma-separated list of all available rollershutter names. . The rollershutter with the extension all is the group of all rollershutter. """
             return ", ".join([shutter.name for shutter in self.rollershutters])
 
 
