@@ -48,7 +48,7 @@ class SimpleRequestHandler(BaseHTTPRequestHandler):
         self.wfile.write(json.dumps(data).encode("utf-8"))
 
 class RollershutterWebServer:
-    def __init__(self, shutters: List[RollerShutter],  host='0.0.0.0', port=8000):
+    def __init__(self, shutters: List[RollerShutter],  host='localhost', port=8000):
         self.host = host
         self.port = port
         self.address = (self.host, self.port)
