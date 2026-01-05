@@ -9,43 +9,43 @@ class RollershutterMCPServer(MCPServer):
         super().__init__(name, port)
         self.rollershutters = rollershutters
 
-
-        @self.mcp.resource("rollershutter://list/names")
-        def list_shutter_names() -> str:
-            """Returns a comma-separated list of all available rollershutter names. . The rollershutter with the extension all is the group of all rollershutter. """
-            return ", ".join([shutter.name for shutter in self.rollershutters])
-
-
-        @self.mcp.resource("rollershutter://{shuttername}/position")
-        def get_position(shuttername: str) -> int:
-            """
-            Returns the current position of a specific rollershutter.
-            0 = fully open, 100 = fully closed.
-            """
-            for shutter in self.rollershutters:
-                if shutter.name == shuttername:
-                    return shutter.position
-            raise ValueError(f"Roller shutter '{shuttername}' not found")
-
-
         @self.mcp.tool()
         def set_position(name: str, position: int) -> str:
             """
-            Moves a specific rollershutter to a target position.
-            :param name: The name of the shutter (e.g., 'Kitchen')
-            :param position: Target position from 0 (open) to 100 (closed)
+            Moves a specific rollershutter or all shutters to a target position.
+            Orientation:
+            0 = FULLY OPEN (Sunshine/Daylight).
+            100 = FULLY CLOSED (Privacy/Night mode).
+
+            :param name: The name of the shutter (e.g., 'Kitchen') or 'all' to move everything.
+            :param position: Target position from 0 (open) to 100 (closed).
             """
+            # Logic for 'all' group
+            if name.lower() == "all":
+                for s in self.rollershutters:
+                    s.set_position(position)
+                return f"Success: All shutters are moving to {position}%."
+
+            # Logic for individual shutters
             shutter = next((s for s in self.rollershutters if s.name == name), None)
             if shutter is None:
-                return f"Error: Rollershutter '{name}' was not found."
+                return f"Error: Rollershutter '{name}' not found. Available: {[s.name for s in self.rollershutters]}"
 
             if not (0 <= position <= 100):
-                return "Error: Position must be an integer between 0 and 100."
+                return "Error: Position must be between 0 (open) and 100 (closed)."
 
             # Execute the movement
             shutter.set_position(position)
             return f"Success: {name} is moving to {position}%."
 
+        @self.mcp.tool()
+        def get_system_status() -> str:
+            """
+            Provides a summary of all rollershutters and their current positions.
+            Use this tool when the user asks 'Are the shutters closed?' or 'What is the status?'.
+            """
+            status_list = [f"{s.name}: {s.position}%" for s in self.rollershutters]
+            return "Current Status: " + " | ".join(status_list)
 
 # npx @modelcontextprotocol/inspector
 
