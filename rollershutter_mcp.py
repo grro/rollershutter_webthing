@@ -6,7 +6,7 @@ from mcplib.server import MCPServer
 class RollershutterMCPServer(MCPServer):
 
     def __init__(self, name: str, port: int, rollershutters: List[Shutter]):
-        super().__init__(name, port)
+        super().__init__("rollershutter_" + name, port)
         self.rollershutters = rollershutters
 
         @self.mcp.tool()
