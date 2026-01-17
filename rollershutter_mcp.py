@@ -1,6 +1,6 @@
 from typing import List
-from mcp_server import MCPServer
 from rollershutter import Shutter
+from mcplib.server import MCPServer
 
 
 class RollershutterMCPServer(MCPServer):
