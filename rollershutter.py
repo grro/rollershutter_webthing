@@ -1,23 +1,25 @@
 import logging
-from typing import List
+from datetime import datetime
+from typing import List, Callable, Set
 from abc import ABC, abstractmethod
 from threading import Thread
 from time import sleep
-from shelly import ShellyRollershutter
 
+from shelly import ShellyRollershutter
 
 
 class Shutter(ABC):
 
     def __init__(self, name: str):
         self.__name = name
-        self.__listeners = set()
+        self.__listeners: Set[Callable[['Shutter'], None]] = set()
 
-    def add_listener(self, listener):
+    def register_listener(self, listener: Callable[['Shutter'], None]):
         self.__listeners.add(listener)
 
-    def _notify_listeners(self):
-        [listener() for listener in self.__listeners]
+    def _notify_listeners(self, shutter: 'Shutter'):
+        for listener in self.__listeners:
+            listener(shutter)
 
     def start(self):
         pass
@@ -31,6 +33,11 @@ class Shutter(ABC):
 
     @property
     @abstractmethod
+    def last_pos_update(self) -> datetime:
+        pass
+
+    @property
+    @abstractmethod
     def position(self) -> int:
         pass
 
@@ -39,37 +46,52 @@ class Shutter(ABC):
         pass
 
 
-
 class RollerShutter(Shutter):
 
     def __init__(self, name: str, addr: str, reverse_directions: bool):
+        super().__init__(name)
         self.__is_running = True
-        self.__position = 0
+        self.__raw_position = 0
+        self.__last_pos_update = datetime.now()
         self.__reverse_directions = reverse_directions
         self.__shelly = ShellyRollershutter(addr)
-        super().__init__(name)
+
         try:
-            logging.info("shutter " + name + " connected. Current pos: " + str(self.__shelly.current_position()) + " (" + addr + "). reverse_directions=" + str(self.__reverse_directions))
+            # Safely get initial position on startup
+            pos = self.__shelly.current_position()
+            if pos is not None:
+                self.__raw_position = pos
+            logging.info(f"Shutter {name} connected. Current pos: {self.position} ({addr}). reverse_directions={self.__reverse_directions}")
         except Exception as e:
-            logging.error("shutter " + name + " could not connect to " + addr + ". Error: " + str(e))
+            logging.error(f"Shutter {name} could not connect to {addr}. Error: {e}")
 
     @property
     def position(self) -> int:
         if self.__reverse_directions:
-            return 100 - self.__position
-        else:
-            return self.__position
+            return 100 - self.__raw_position
+        return self.__raw_position
+
+    @property
+    def last_pos_update(self) -> datetime:
+        return self.__last_pos_update
 
     def set_position(self, target_position: int):
-        logging.info(self.name + " setting position=" + str(target_position))
-        if self.__reverse_directions:
-            self.__position = self.__shelly.update_position(100-target_position)
-        else:
-            self.__position = self.__shelly.update_position(target_position)
-        self._notify_listeners()
+        logging.info(f"{self.name} setting position={target_position}")
+
+        raw_target = 100 - target_position if self.__reverse_directions else target_position
+
+        try:
+            new_pos = self.__shelly.update_position(raw_target)
+            if new_pos is not None:
+                self.__raw_position = new_pos
+            self.__last_pos_update = datetime.now()
+            self._notify_listeners(self)
+        except Exception as e:
+            logging.error(f"Error setting position for {self.name}: {e}")
 
     def start(self):
-        Thread(target=self.__sync_loop, daemon=True).start()
+        self.__is_running = True
+        Thread(target=self.__sync_loop, daemon=True, name=f"Sync-{self.name}").start()
 
     def stop(self):
         self.__is_running = False
@@ -78,46 +100,62 @@ class RollerShutter(Shutter):
         while self.__is_running:
             try:
                 self.__sync()
-                self._notify_listeners()
                 sleep(3.03)
             except Exception as e:
-                logging.warning("error occurred on sync " + str(e))
+                logging.warning(f"Error occurred on sync loop for {self.name}: {e}")
                 sleep(3)
 
-    def __sync(self) -> bool:
+    def __sync(self):
         try:
-            self.__position = self.__shelly.current_position()
-            return True
+            pos = self.__shelly.current_position()
+            # Only update and notify IF the position actually changed
+            if pos is not None and pos != self.__raw_position:
+                self.__raw_position = pos
+                self.__last_pos_update = datetime.now()
+                self._notify_listeners(self)
         except Exception as e:
-            return False
-
+            logging.warning(f"Error occurred getting current position for {self.name}: {e}")
 
 
 class RollerShutters(Shutter):
 
     def __init__(self, name: str, shutters: List[RollerShutter]):
-        self.__shutter = shutters
-        [shutter.add_listener(self._notify_listeners) for shutter in shutters]
         super().__init__(name)
+        self.__shutters = shutters
+
+        for shutter in self.__shutters:
+            shutter.register_listener(self._notify_listeners)
 
     @property
     def position(self) -> int:
         positions = []
-        for shutter in self.__shutter:
+        for shutter in self.__shutters:
             try:
                 positions.append(shutter.position)
             except Exception as e:
-                logging.error("error getting position for " + shutter.name + ": " + str(e))
+                logging.error(f"Error getting position for {shutter.name}: {e}")
 
-        total = sum(positions)
-        if total == 0:
+        if not positions:
             return 0
-        else:
-            return int(total/len(positions))
+        return int(sum(positions) / len(positions))
+
+    @property
+    def last_pos_update(self) -> datetime:
+        if not self.__shutters:
+            return datetime.now()
+        return max(shutter.last_pos_update for shutter in self.__shutters)
 
     def set_position(self, target_position: int):
-        for shutter in self.__shutter:
+        for shutter in self.__shutters:
             try:
                 shutter.set_position(target_position)
             except Exception as e:
-                logging.error("error setting position for " + shutter.name + ": " + str(e))
+                logging.error(f"Error setting position for {shutter.name}: {e}")
+
+    def start(self):
+        for shutter in self.__shutters:
+            shutter.start()
+
+    def stop(self):
+        for shutter in self.__shutters:
+            shutter.stop()
